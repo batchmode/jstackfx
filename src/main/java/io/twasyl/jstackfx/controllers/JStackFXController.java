@@ -1,23 +1,5 @@
 package io.twasyl.jstackfx.controllers;
 
-import io.twasyl.jstackfx.beans.Dump;
-import io.twasyl.jstackfx.beans.InMemoryDump;
-import io.twasyl.jstackfx.beans.ThreadElement;
-import io.twasyl.jstackfx.beans.ThreadReference;
-import io.twasyl.jstackfx.exceptions.DumpException;
-import io.twasyl.jstackfx.factory.DumpFactory;
-import io.twasyl.jstackfx.ui.SearchField;
-import javafx.beans.binding.StringExpression;
-import javafx.beans.property.*;
-import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.chart.PieChart;
-import javafx.scene.control.*;
-import javafx.scene.text.TextFlow;
-import javafx.stage.FileChooser;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,6 +9,39 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
+
+import io.twasyl.jstackfx.beans.Dump;
+import io.twasyl.jstackfx.beans.InMemoryDump;
+import io.twasyl.jstackfx.beans.ThreadElement;
+import io.twasyl.jstackfx.beans.ThreadReference;
+import io.twasyl.jstackfx.exceptions.DumpException;
+import io.twasyl.jstackfx.factory.DumpFactory;
+import io.twasyl.jstackfx.ui.SearchField;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.chart.PieChart;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.Tooltip;
+import javafx.scene.text.TextFlow;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 /**
  * Controller of the {@code jstack.fxml} file.
@@ -84,17 +99,24 @@ public class JStackFXController implements Initializable {
 
     @FXML
     private void makeThreadDump(final ActionEvent event) {
-        final TextInputDialog dialog = new TextInputDialog();
-        dialog.setHeaderText("Enter the process ID to make the thread dump for:");
-        final String userAnswer = dialog.showAndWait().orElse(null);
+        
+        try {
 
-        if (userAnswer != null && !userAnswer.isEmpty()) {
-            final long pid = Long.parseLong(userAnswer);
-            try {
-                this.dumpPID(pid);
-            } catch (DumpException e) {
-                showError(e);
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/twasyl/jstackfx/fxml/jvmList.fxml"));
+            Parent root = loader.load();
+            Stage dialog = new Stage();
+            dialog.setScene(new Scene(root));
+            dialog.initModality(Modality.WINDOW_MODAL);
+            dialog.initOwner(saveDumpButton.getScene().getWindow());
+            dialog.initStyle(StageStyle.UTILITY);
+            dialog.showAndWait();
+            
+            SelectJvmController jvmListController = loader.getController();
+            if(jvmListController.selectedPid().isPresent()) {
+                dumpPID(jvmListController.selectedPid().get());
             }
+        } catch (IOException | DumpException e) {
+            showError(e);
         }
     }
 
