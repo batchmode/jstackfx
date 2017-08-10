@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 import io.twasyl.jstackfx.factory.PidFactory;
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
@@ -44,6 +45,9 @@ public class SelectJvmController {
     @FXML
     void initialize() {
         assert jvmList != null : "fx:id=\"jvmList\" was not injected: check your FXML file 'jvmList.fxml'.";
+        
+        jvmList.setFixedCellSize(24);
+        jvmList.prefHeightProperty().bind(jvmList.fixedCellSizeProperty().multiply(Bindings.size(jvmList.getItems())).add(2d));
 
         loadJvms();
 
